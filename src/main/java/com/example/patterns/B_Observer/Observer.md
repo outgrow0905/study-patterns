@@ -1,6 +1,6 @@
 #### Observer Pattern
 #### v1
-WeatherInformationCollector 클래스는 온도, 습도, 기압 디바이스로부터 정보를 얻어온다(고 가정한다).  
+WeatherStation 클래스는 온도, 습도, 기압 디바이스로부터 정보를 얻어온다(고 가정한다).  
 그리고, 정보 수집이 끝나면 WeatherData에 정보를 전달한다.
 
 ~~~java
@@ -29,8 +29,9 @@ public class WeatherStation {
 }
 ~~~
 
-WeatherData 클래스는 또한 WeatherObserver 인터페이스를 구현하여 WeatherSubject를 등록, 해지, 알림 역할을 한다.  
-추가로, WeatherStation는 setWeatherInformation 메서드를 호출하는 클라이언트이다.
+WeatherData 클래스는 WeatherObserver 인터페이스를 구현하여 WeatherObserver를 등록, 해지, 알림 역할을 한다.  
+WeatherStation는 WeatherData의 클라이언트이고 setWeatherInformation을 호출하여   
+WeatherData에 등록된 WeatherObserver 전부에게 변경사항을 전달한다.
 
 ~~~java
 public class WeatherData implements WeatherSubject {
