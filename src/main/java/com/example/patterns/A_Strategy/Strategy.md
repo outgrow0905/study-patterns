@@ -92,31 +92,14 @@ public void setFlyable(Flyable flyable) {
 ~~~
 
 완벽한 것 같지만 한가지 걱정이 있다.  
-클라이언트에서 Setter를 주입하지 않으면 NPE가 날 것 같다.    
+클라이언트에서 Setter를 주입하지 않으면 NPE가 날 것 같다.  
+팀에 새로 들어온 개발자가 잘못 사용한다면 큰일이지 않은가?  
 
-#### v4
-마지막으로 Duck 클래스에서 Setter를 제거하고 생성자 주입을 사용하는 것으로 변경하자.
+충분히 할 수 있는 우려이다.   
+다만, 생성자 주입을 사용하면 Duck 클래스는 물론, Duck 클래스를 구현한 모든 클레스에 생성자 코드를 추가해야 한다.  
+그렇게 함으로서 NPE의 우려를 덜 수 있다면, 그렇게 하면 된다.  
 
-~~~java
-public Duck(Soundable soundable, Flyable flyable) {
-        this.soundable = soundable;
-        this.flyable = flyable;
-}
-~~~
+하지만, Strategy는 런타임에서 Strategy를 동적으로 언제든 변경해할 수 있는 상황에 적합하다.        
+게임 케릭터가 무기를 계속해서 변경하는 상황을 생각해보자.  
+Setter 주입을 통해 런타임에서 Strategy를 계속 변경할 수 있는 것이 요구에 맞을 것이다.    
 
-이렇게 변경하면, Duck을 구현한 모든 클래스에 코드를 추가해주어야 한다.  
-차라리 v3이 나은것 같기도 하지만, 이게 나는 더 마음이 편하다. 
-
-~~~java
-public CommonADuck(Soundable soundable, Flyable flyable) {
-    super(soundable, flyable);
-}
-
-public CommonBDuck(Soundable soundable, Flyable flyable) {
-    super(soundable, flyable);
-}
-
-public RubberDuck(Soundable soundable, Flyable flyable) {
-    super(soundable, flyable);
-}
-~~~
