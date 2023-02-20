@@ -127,3 +127,54 @@ createPizza 메서드는 꼭 PizzaStore이 아니더라도 여러곳에서 호�
 
 아직 Factory 패턴은 시작도 안했다. 가봅시다.
 
+
+#### v3
+잠시 멈추고, v1에서 다른 방법으로 개선할 수는 없었는지 생각해보자.  
+Pizza의 구상클래스를 만드는 부분을 v2처럼 factory로 위임하지 말고, 메서드로 뺄 수도 있을 것 같다.  
+어차피 Pizza 구상클래스만 만들어서 리턴하면 되는데, 클래스든 메서드든 무슨 상관인가?  
+
+~~~java
+public abstract class PizzaStore {
+
+    public Pizza orderPizza(String type) {
+        Pizza pizza = createPizza(type);
+
+        pizza.prepare();
+        pizza.bake();
+        pizza.cut();
+        pizza.box();
+
+        return pizza;
+    }
+
+    abstract Pizza createPizza(String type);
+}
+
+public class CommonPizzaStore extends PizzaStore {
+    @Override
+    Pizza createPizza(String type) {
+        Pizza pizza = null;
+        if ("cheese".equals(type)) {
+            pizza = new CheesePizza();
+        }
+        if ("mozzarella".equals(type)) {
+            pizza = new MozzarellaPizza();
+        }
+
+        if (null == pizza) {
+            throw new RuntimeException("We don't sell that type of pizza.");
+        }
+
+        return pizza;
+    }
+}
+~~~
+
+v3와 다른 점은, 
+factory 클래스들이 없어지고 다른 피자를 생성하는 피자가게가 필요하다면,  
+PizzaStore 클래스를 상속하여 새로운 클래스를 만드는 방식으로 확장하는 것이다.   
+
+이러한 방식을 Factory Method Pattern 이라고 한다. 이름이 직관적이다.  
+구상클래스를 만드는 역할을 하는 Factory를 Method에서 한다는 말이니말이다.
+
+Seoul 스타일 치즈피자와 모짜렐라 피자를 판매하는 SeoulPizzaStore를 연습으로 만들어보라.
