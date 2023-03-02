@@ -1,4 +1,4 @@
-`#### Factory Pattern
+#### Factory Pattern
 #### v1
 피자가게를 오픈했다.  
 간단하게 Pizza 인터페이스와 이를 구현한 두 종류의 피자가 있다.  
@@ -178,3 +178,176 @@ PizzaStore 클래스를 상속하여 새로운 클래스를 만드는 방식으�
 구상클래스를 만드는 역할을 하는 Factory를 Method에서 한다는 말이니말이다.
 
 Seoul 스타일 치즈피자와 모짜렐라 피자를 판매하는 SeoulPizzaStore를 연습으로 만들어보라.
+
+
+#### v4
+Factory Method Pattern은 v3까지이다. 
+이제부터는 Abstract Factory Pattern을 연습해보자.  
+이름이 v4이지만, Factory Method Pattern의 개선이나 호환은 아니라는 점을 미리 명심하자.
+
+Pizza로 다른 이야기를 만들어보자.  
+Pizza는 Sauce, Dough, Veggie[], Shrimp 으로 구성되어있다.  
+
+모든 피자는 이 재료 내에서 만들어진다.  
+
+예를 들어,   
+치즈피자는 Sauce, Dough, Veggie[]로 구성되고,  
+새우피자는 Sauce, Dough, Shrimp으로 구성된다.
+
+지역별 피자는 정해진 Sauce, Dough, Veggie[], Shrimp 재료 내에서 만들어져야 한다고 생각해보자.  
+예를 들어, NY스타일은 치즈피자를 만들든, 새우피자를 만들든 Sauce는 NYSauce를 사용해야 한다.
+
+~~~java
+public abstract class Pizza {
+    String name;
+    Dough dough;
+    Sauce sauce;
+    Shrimp shrimp;
+    Veggie[] veggies;
+
+    abstract void prepare();
+
+    void bake() {
+        System.out.println("bake for 25 minutes at 350F");
+    }
+    void cut() {
+        System.out.println("cut the pizza into diagonal slices");
+    }
+    void box() {
+        System.out.println("place the pizza in official pizza store box");
+    }
+}
+~~~
+
+피자재료 팩토리를 만들어보자.
+
+~~~java
+public interface PizzaIngredientFactory {
+    Dough getDough();
+    Sauce getSauce();
+    Veggie[] getVeggies();
+    Shrimp getShrimp();
+}
+~~~
+
+뉴욕스타일 피자재료 팩토리를 만들어보자.
+
+~~~java
+public class NYPizzaIngredientFactory implements PizzaIngredientFactory {
+    @Override
+    public Dough getDough() {
+        return new NYStyleDough();
+    }
+
+    @Override
+    public Sauce getSauce() {
+        return new NYStyleSauce();
+    }
+
+    @Override
+    public Veggie[] getVeggies() {
+        return new Veggie[]{new Tomato(), new Olive()};
+    }
+
+    @Override
+    public Shrimp getShrimp() {
+        return new BlackShrimp();
+    }
+}
+~~~
+
+치즈피자와 새우피자를 만들어보자.  
+
+~~~java
+public class CheesePizza extends Pizza {
+
+    private PizzaIngredientFactory pizzaIngredientFactory;
+
+    public CheesePizza(PizzaIngredientFactory pizzaIngredientFactory) {
+        this.pizzaIngredientFactory = pizzaIngredientFactory;
+    }
+
+    @Override
+    void prepare() {
+        dough = pizzaIngredientFactory.getDough();
+        sauce = pizzaIngredientFactory.getSauce();
+        veggies = pizzaIngredientFactory.getVeggies();
+    }
+}
+
+public class ShrimpPizza extends Pizza{
+
+    PizzaIngredientFactory pizzaIngredientFactory;
+
+    public ShrimpPizza(PizzaIngredientFactory pizzaIngredientFactory) {
+        this.pizzaIngredientFactory = pizzaIngredientFactory;
+    }
+
+    @Override
+    void prepare() {
+        dough = pizzaIngredientFactory.getDough();
+        sauce = pizzaIngredientFactory.getSauce();
+        shrimp = pizzaIngredientFactory.getShrimp();
+    }
+}
+~~~
+
+PizzaStore는 v3과 동일하다.
+
+~~~java
+public abstract class PizzaStore {
+
+    public Pizza orderPizza(String type) {
+        Pizza pizza = createPizza(type);
+
+        pizza.prepare();
+        pizza.bake();
+        pizza.cut();
+        pizza.box();
+
+        return pizza;
+    }
+
+    abstract Pizza createPizza(String type);
+}
+~~~
+
+NYPizzaStore를 만들어보자.
+~~~java
+public class NYPizzaStore extends PizzaStore{
+
+    NYPizzaIngredientFactory factory = new NYPizzaIngredientFactory();
+
+    @Override
+    Pizza createPizza(String type) {
+        Pizza pizza = null;
+
+        if ("cheese".equals(type)) {
+            pizza = new CheesePizza(factory);
+        }
+
+        if ("shrimp".equals(type)) {
+            pizza = new ShrimpPizza(factory);
+        }
+
+        if (null == pizza) {
+            throw new RuntimeException("We don't sell that type of pizza.");
+        }
+
+        return pizza;
+    }
+}
+~~~
+
+클라이언트 코드는 아래와 같을 것이다.
+
+~~~java
+class PizzaStoreTest {
+    @Test
+    void orderPizza() {
+        PizzaStore nyPizzaStore = new NYPizzaStore();
+        Pizza cheesePizza = nyPizzaStore.orderPizza("cheese");
+        Pizza shrimpPizza = nyPizzaStore.orderPizza("shrimp");
+    }
+}
+~~~
