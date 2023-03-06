@@ -3,10 +3,10 @@ package com.example.patterns.D_Factory.v3;
 import java.util.ArrayList;
 
 public abstract class Pizza {
-    String name;
-    String dough;
-    String sauce;
-    ArrayList<String> toppings = new ArrayList<>();
+    protected String name;
+    protected String dough;
+    protected String sauce;
+    protected ArrayList<String> toppings = new ArrayList<>();
 
     void prepare() {
         System.out.println("preparing " + name);
