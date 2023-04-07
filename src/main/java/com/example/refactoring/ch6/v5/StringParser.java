@@ -1,4 +1,4 @@
-package com.example.refactoring.ch6.v1;
+package com.example.refactoring.ch6.v5;
 
 public class StringParser {
     Parser parser;
@@ -9,6 +9,6 @@ public class StringParser {
     }
 
     public Node createStringNode() {
-        return StringNode.createStringNode(parser.isDoingSpecialThing(), a);
+        return parser.getNodeFactory().createStringNode(a);
     }
 }
