@@ -41,8 +41,206 @@
 그리고 `방문객`과 `극장`의 대화가 시작될 것이다.  
 `극장`은 `방문객`의 `티켓`보유여부를 확인하고 `관람객`을 입장시키는 역할을 하면 될 것이다.  
 
-객체세계의 코드를 작성해보자. 
+객체세계의 코드를 작성해보자.
 
 
 
 #### v1
+`getter, setter`를 먼저 작성하는 습관을 버리고, 위의 설계에 따라 시작해보자.  
+`티켓, 초대권, 가방, 방문객`은 아래와 같을 것이다.
+
+~~~java
+public class Ticket {
+	private Long fee;
+
+	public Ticket(Long fee) {
+		this.fee = fee;
+	}
+}
+~~~
+~~~java
+public class Invitation {
+	private LocalDateTime when;
+
+	public Invitation(LocalDateTime when) {
+		this.when = when;
+	}
+}
+~~~
+~~~java
+public class Bag {
+	private Long amount;
+	private Invitation invitation;
+	private Ticket ticket;
+
+	public Bag(Long amount) {
+		this.amount = amount;
+	}
+
+	public Bag(Long amount, Invitation invitation) {
+		this.amount = amount;
+		this.invitation = invitation;
+	}
+}
+~~~
+~~~java
+public class Audience {
+	private Bag bag;
+
+	public Audience(Bag bag) {
+		this.bag = bag;
+	}
+}
+~~~
+
+이제 `메시지`를 추가해보자.  
+어떤 `메시지`를 가장 먼저 추가할까?  
+`방문객`이 `가방`에게 `티켓금액`을 확인해달라고 하거나,   
+`초대권`이 있는지 여부를 확인해달라고 하는 행동은 `티켓판매원`과 대화를 할 때이다.  
+그리고 대화는 `방문객`이 `티켓판매원`에게 말을 걸면서 시작한다.  
+
+내가 가장먼저 추가할 메시지는 아래와 같다.  
+
+~~~java
+public class Audience {
+    ...
+	
+	public Ticket buyTicket(TicketSeller ticketSeller) {
+		...
+	}
+}
+~~~
+
+이제 `buyTicket()`의 동작을 생각해보자.    
+
+~~~
+1. 가방에게 초대권이 있는지 확인
+2. 초대권이 있다면 초대권을 티켓판매원에게 전달
+3. 초대권이 없다면 금액을 티켓판매원에게 전달
+~~~
+
+`티켓판매원`에게는 `초대권`과 `금액`을 전달하는 `메시지`가 필요하다. 이를 추가하자.  
+~~~java
+public class TicketSeller {
+    ...
+    
+	public Ticket sellTicket(Invitation invitation, Long amount) {
+		...
+	}
+}
+~~~
+
+`방문객` 입장에서 `sellTicket()` `메시지`만 알면 된다. 세부로직은 알 필요가 없다.  
+`buyTicket()`를 완성해보자.  
+
+~~~java
+public Ticket buyTicket(TicketSeller ticketSeller) {
+    ticketSeller.sellTicket(bag.getInvitation(), bag.getAmount());
+
+    ...
+}
+~~~
+
+코드의 첫 줄을 쓰고부터 문제가 생겼다.  
+일단 `가방`에서 `getter`를 두 번 호출하는 것부터 찝찝하다.  
+무엇보다, `티켓판매원`에게 내가 `1억`이 있으면 `1억`을 전달해야하는 부분이 문제이다.  
+`티켓판매원`에게 `티켓금액`을 물어보고 필요금액만큼만 전달해야한다.  
+그리고 `가방`에 `티켓금액`만큼만 차감할 수 있도록 하는 행동이 필요하고,  
+`티켓`을 받으면 `티켓`을 보유할 수 있도록 `가방`에 `티켓`필드도 추가해야겠다.
+
+~~~java
+public class TicketSeller {
+	private TicketOffice ticketOffice;
+	
+    ...
+
+	public Long getTicketPrice() {
+		return ticketOffice.getTicketFee();
+	}
+}
+~~~
+
+~~~java
+public class TicketOffice {
+	private Long amount;
+	private List<Ticket> tickets = new ArrayList<>();
+
+    ...
+    
+	public Long getTicketFee() {
+		return tickets.get(0).getFee();
+	}
+}
+~~~
+
+`티켓판매원`은 `티켓오피스`에 `티켓가격`을 물어봐야하고, `티켓오피스`는 `티켓`으로부터 `금액`을 가져와야 한다.  
+이를 위해 위와같이 메서드를 추가하였다.
+
+`가방`에는 여러개의 메서드가 추가되었다.
+~~~java
+public class Bag {
+    ...
+    
+	public void minusAmount(Long amount) {
+		this.amount -= amount;
+	}
+
+	public boolean hasInvitation() {
+		return this.invitation != null;
+	}
+
+	public void setTicket(Ticket ticket) {
+		this.ticket = ticket;
+	}
+
+	public Invitation getInvitation() {
+		return invitation;
+	}
+}
+~~~
+
+이제 다시 `buyTicket()`을 완성해보자.
+
+~~~java
+public void buyTicket(TicketSeller ticketSeller) {
+    if (bag.hasInvitation()) {
+        Ticket ticket = ticketSeller.sellTicket(bag.getInvitation(), null);
+        bag.setTicket(ticket);
+        return;
+    }
+
+    Long ticketPrice = ticketSeller.getTicketPrice();
+    bag.minusAmount(ticketPrice);
+    Ticket ticket = ticketSeller.sellTicket(null, ticketPrice);
+    bag.setTicket(ticket);
+}
+~~~
+
+티켓판매원의 `sellTicket()`도 완성해보자.
+
+~~~java
+public Ticket sellTicket(Invitation invitation, Long amount) {
+    return ticketOffice.sellTicket(amount);
+}
+~~~
+
+`티켓오피스`의 `sellTicket()`은 간단할 것이다.
+
+~~~java
+public class TicketOffice {
+    ...
+    
+	public void plusAmount(Long amount) {
+		this.amount += amount;
+	}
+
+	public Ticket sellTicket(Long amount) {
+		plusAmount(amount);
+		return tickets.remove(0);
+	}
+}
+~~~
+
+완성된 클래스다이어그램은 아래와 같다.
+
+![theater](img/theater.png)
