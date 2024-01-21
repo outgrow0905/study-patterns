@@ -81,7 +81,7 @@ public Reservation reserve(int count);
 하지만, 놀랍게도 이 시스템은 `영화가 하나의 할인정책`을 가지고 있다.   
 어떤 시간에 상영하느냐에 관계없이 같은 영화라면 정액, 정률중 하나만 적용된다. `(공부를 위한 설계이다.)`  
 
-따라서, `할인정책`은 `영화의 필드`로 들어가게 된다.  
+따라서, `할인정책`은 `영화의 필드`로 들어가게 된다. `영화금액`도 `상영`이 아닌 `영화의 필드`로 들어가게 된다.
 자연스럽게 `할인금액 계산하기`라는 `역할`은 `할인정보 전문가`인 `영화`에게 할당된다.  
 여기서 중요한 것은 `상영`은 `영화`에게 `할인금액을 계산하라`고 요청할뿐, 정액, 정률여부는 중요하지 않다는 것이다.  
 `영화`에게 `상영정보`를 넘겨주면서 `할인금액을 요청`하고 `금액을 받으면` 그 뿐이다.   
@@ -92,10 +92,71 @@ public Reservation reserve(int count);
 public long calculateFee(Screening screening);
 ~~~
 
-`영화`는 `영화예매`라는 `협력`안에서 `상영정보를 받아 할인금액을 계산`할 `책임`이 있다.  
-그리고 시스템 요구사항에 따라 영화가 `할인정책` 정보를 가지고 있는데, `정액, 정률` 하나씩 각각 가지고 있어야 할까?  
-이 결정은 `영화`와 `할인정책`의 주고받는 `메시지`로 결정된다.  
- 
-`영화`는 `상영정보`를 받고 `할인금액`을 반환하는 것이다.  
-`영화`는 `상영`으로부터 받은 `상영정보`를 `할인정책`을 구분하지 않고 `할인정책`에 넘겨주면서 `할인금액을 계산`하라고 요청하고 `할인금액`을 돌려받을 뿐이다.
-따라서, 이를 처리해줄 `추상화된 할인정책`이라는 `객체`가 있는게 좋을 것 같다.  
+`영화`는 `상영객체`와 `영화예매`라는 `협력`안에서 `상영정보를 받아 영화금액을 계산`할 `책임`이 있다.  
+`영화`는 `정액할인, 정률할인` 중 하나의 타입만 가질 수 있다.  
+
+그런데, 할인을 적용하려면 `할인조건 적용여부`를 알아야한다.  
+할인조건 적용여부는 `두가지 타입`이 있고, 영화는 `여러개의 할인조건`을 가질 수 있다.  
+영화는 `할인조건 리스트`에 할인조건에 해당하는지 하나씩 물어보면 될 것 같다.  
+메시지를 추가하자.  
+
+~~~java
+public interface DiscountCondition {
+    boolean isSatisfiedBy(Screening screening);
+}
+~~~
+
+위의 메시지를 `영화`에서 이용하자. 
+
+~~~java
+public abstract class Movie {
+	private String name;
+	private Long fee;
+	private List<DiscountCondition> discountConditions;
+
+	public long calculateFee(Screening screening) {
+		if (discountConditions.stream()
+			.anyMatch(discountCondition -> discountCondition.isSatisfiedBy(screening))) {
+            return fee - getDiscountFee(this);
+		}
+		return fee;
+	}
+	
+	
+	abstract protected long getDiscountFee(Movie movie);
+}
+~~~
+
+영화의 타입별로 `정률유형타입 영화, 정액유형타입 영화` 두개의 클래스를 만들자.  
+
+~~~java
+public class AmountDiscountMovie extends Movie {
+    private Long amount;
+
+    @Override
+    protected long getDiscountFee(Movie movie) {
+        return 0;
+    }
+}
+
+public class PercentDiscountMovie extends Movie {
+    private Double percent;
+    @Override
+    protected long getDiscountFee(Movie movie) {
+        return 0;
+    }
+}
+~~~
+
+계산을 하려고 보니 영화로부터 영화금액을 조회할 수 있어야 한다.  
+영화에 메서드를 추가하자.  
+
+~~~java
+public abstract class Movie {
+    ...
+
+	public Long getFee() {
+		return fee;
+	}
+
+~~~
