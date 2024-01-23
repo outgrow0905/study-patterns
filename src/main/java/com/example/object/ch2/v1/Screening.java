@@ -11,4 +11,16 @@ public class Screening {
 	public Reservation reserve(int count) {
 		return null;
 	}
+
+	public int getSequence() {
+		return sequence;
+	}
+
+	public LocalDateTime getStartTime() {
+		return startTime;
+	}
+
+	public Long getMovieFee() {
+		return movie.getFee();
+	}
 }

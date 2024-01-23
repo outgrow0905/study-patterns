@@ -1,6 +1,6 @@
 package com.example.object.ch1.v1;
 
-public class Audience extends TicketSeller {
+public class Audience {
 	private Bag bag;
 
 	public Audience(Bag bag) {
