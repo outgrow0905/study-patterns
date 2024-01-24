@@ -13,6 +13,6 @@ public class SequenceDiscountCondition extends DiscountCondition {
 
 	@Override
 	public boolean isSatisfiedBy(Screening screening) {
-		return screening.getSequence() == 1;
+		return screening.getSequence() == this.dailySequence;
 	}
 }

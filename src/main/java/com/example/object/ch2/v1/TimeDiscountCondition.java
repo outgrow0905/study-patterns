@@ -1,15 +1,10 @@
 package com.example.object.ch2.v1;
 
-import java.time.DayOfWeek;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
 
 @Entity
 @DiscriminatorValue("TIME")
@@ -22,9 +17,9 @@ public class TimeDiscountCondition extends DiscountCondition{
 
 	@Override
 	public boolean isSatisfiedBy(Screening screening) {
-		if (screening.getStartTime().getDayOfWeek() == DayOfWeek.MONDAY
-			&& screening.getStartTime().toLocalTime().isAfter(LocalTime.MIDNIGHT)
-			&& screening.getStartTime().toLocalTime().isBefore(LocalTime.NOON)) {
+		if (screening.getStartTime().getDayOfWeek() == this.discountStartTime.getDayOfWeek()
+			&& screening.getStartTime().isAfter(this.discountStartTime)
+			&& screening.getStartTime().isBefore(this.discountEndTime)) {
 			return true;
 		}
 		return false;

@@ -28,10 +28,10 @@ public class Movie {
 	private Long fee;
 
 	@OneToOne
-	@JoinColumn(name = "discount_policy_id")
+	@JoinColumn(name = "discount_policy_id", nullable = false)
 	private DiscountPolicy discountPolicy;
 
-	public long calculateFee(Screening screening) {
+	public Long calculateFee(Screening screening) {
 		return discountPolicy.calculateDiscountAmount(screening);
 	}
 

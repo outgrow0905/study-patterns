@@ -19,7 +19,7 @@ public class DiscountConditionGroup {
 	private Long discountConditionGroupId;
 
 	@OneToMany
-	@JoinColumn(name = "discount_condition_id")
+	@JoinColumn(name = "discount_condition_group_id")
 	private List<DiscountCondition> discountConditions;
 
 	public boolean isSatisfiedBy(Screening screening) {

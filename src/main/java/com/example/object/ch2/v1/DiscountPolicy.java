@@ -22,7 +22,7 @@ public abstract class DiscountPolicy {
 	@Column(name = "discount_policy_id")
 	private Long discountPolicyId;
 	@OneToOne
-	@JoinColumn(name = "discount_condition_group_id")
+	@JoinColumn(name = "discount_condition_group_id", nullable = false)
 	private DiscountConditionGroup discountConditionGroup;
 
 	// template method
