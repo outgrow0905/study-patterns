@@ -30,9 +30,6 @@
 
 
 
-
-
-
 #### v1
 시작은 `영화 예매하기`라는 기능으로부터 시작할 수 있을 것 같다.  
 그리고 이 기능은 `영화예매`를 가장 잘 할 수 있는 `객체`에게 `책임`을 부여해야 한다.  
@@ -92,15 +89,121 @@ public Reservation reserve(int count);
 어떤 시간에 상영하느냐에 관계없이 같은 영화라면 정액, 정률중 하나만 적용된다. `(공부를 위한 설계이다.)`  
 따라서, `할인정책`은 `영화의 필드`로 들어가게 된다. `영화금액`도 `상영`이 아닌 `영화의 필드`로 들어가게 된다.
 
+~~~java
+@Entity
+public class Movie {
+@Id
+@GeneratedValue(strategy = GenerationType.IDENTITY)
+@Column(name = "movie_id")
+private Long movieId;
 
+    ...
+    
+	@Column(name = "fee")
+	private Long fee;
 
+	@OneToOne
+	@JoinColumn(name = "discount_policy_id", nullable = false)
+	private DiscountPolicy discountPolicy;
+}
+~~~
 
-자연스럽게 `할인금액 계산하기`라는 `역할`은 `할인정보 전문가`인 `영화`에게 할당된다.  
-여기서 중요한 것은 `상영`은 `영화`에게 `할인금액을 계산하라`고 요청할뿐, 정액, 정률여부는 중요하지 않다는 것이다.  
-`영화`에게 `상영정보`를 넘겨주면서 `할인금액을 요청`하고 `금액을 받으면` 그 뿐이다.   
+자연스럽게 `영화금액 계산하기`라는 `역할`은 `영화정보 전문가`인 `영화`에게 할당된다.  
+여기서 중요한 것은 `상영`은 `영화`에게 `영화금액을 계산하라`고 요청할뿐, 정액, 정률여부는 중요하지 않다는 것이다.  
+`영화`에게 `상영정보`를 넘겨주면서 `영화금액을 요청`하고 `금액을 받으면` 그 뿐이다.   
 
 우리 시스템의 역사적인 두번째 `메시지`를 영화에 만들어주자.
 
 ~~~java
 public long calculateFee(Screening screening);
+~~~
+
+`상영` 입장에서 `영화`는 `영화금액`을 계산할수 있는 전문가이다.  
+`영화` 입장에서는 영화의 `최종 할인금액`을 계산하기 위해, `할인금액 전문가`를 찾아야 한다.  
+위에서 영화는 `DiscountPolicy`를 필드로 가지고 있다.  
+`영화`는 `할인전문가`에게 `할인금액`을 받아와서, 자신이 가지고 있는 `영화금액에서 이를 차감`하고 반환하면 된다.  
+`할인전문가`에게는 `상영`과 더불어 `영화`도 넘겨주면서, `할인전문가`가 `영화금액`을 확인할 수 있도록 하는게 좋을 것 같다.  
+
+메시지를 만들자. 
+
+~~~java
+public Long calculateFee(Screening screening) {
+		return discountPolicy.calculateDiscountAmount(screening, this);
+}
+~~~
+
+이제 정말로 `할인전문가`인 `할인정책`은 `할인금액`을 계산할 수 있을까?  
+`할인조건`에 해당하는지 아닌지만 확인하면 정말로 계산할 수 있다.  
+`할인조건`에 해당하는지를 판단하려면 받은 `상영` 정보를 `할인조건 정보전문가`에 그대로 넘겨주어야 한다.  
+
+~~~java
+@Entity
+@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
+@DiscriminatorColumn(name = "discount_type")
+public abstract class DiscountPolicy {
+    ...
+
+	// template method
+	public long calculateDiscountAmount(Screening screening, Movie movie) {
+		if (discountConditionGroup.isSatisfiedBy(screening)) { // 할인조건 전문가
+			return movie.getFee() - getDiscountAmount(movie);
+		}
+
+		return movie.getFee();
+	}
+
+	abstract protected long getDiscountAmount(Movie movie);
+}
+~~~
+
+`할인조건 전문가`는 `상영`에서 필요한 정보들을 전부 꺼내서 (`getter`) 할인조건에 해당하는지 판단해준다.
+
+~~~java
+@Entity
+@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
+@DiscriminatorColumn(name = "discount_condition_type")
+public abstract class DiscountCondition {
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	@Column(name = "discount_condition_group_id")
+	private Long id;
+
+	@Column(name = "discount_condition_seq")
+	private Integer discountConditionSequence;
+
+	abstract boolean isSatisfiedBy(Screening screening);
+}
+
+@Entity
+@DiscriminatorValue("SEQ")
+public class SequenceDiscountCondition extends DiscountCondition {
+
+	@Column(name = "daily_seq")
+	private Integer dailySequence;
+
+	@Override
+	public boolean isSatisfiedBy(Screening screening) {
+		return screening.getSequence() == this.dailySequence;
+	}
+}
+
+@Entity
+@DiscriminatorValue("TIME")
+public class TimeDiscountCondition extends DiscountCondition{
+
+	@Column(name = "discount_start_time")
+	private LocalDateTime discountStartTime;
+	@Column(name = "discount_end_time")
+	private LocalDateTime discountEndTime;
+
+	@Override
+	public boolean isSatisfiedBy(Screening screening) {
+		if (screening.getStartTime().getDayOfWeek() == this.discountStartTime.getDayOfWeek()
+			&& screening.getStartTime().isAfter(this.discountStartTime)
+			&& screening.getStartTime().isBefore(this.discountEndTime)) {
+			return true;
+		}
+		return false;
+	}
+}
 ~~~

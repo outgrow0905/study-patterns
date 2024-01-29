@@ -10,7 +10,7 @@ public class PercentDiscountPolicy extends DiscountPolicy {
 	@Column(name = "discount_ratio")
 	private Double percent;
 	@Override
-	protected long getDiscountAmount(Screening screening) {
-		return Math.round(screening.getMovieFee() * this.percent / 100);
+	protected long getDiscountAmount(Movie movie) {
+		return Math.round(movie.getFee() * this.percent / 100);
 	}
 }

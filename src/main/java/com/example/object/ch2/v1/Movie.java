@@ -15,7 +15,6 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
 
 @Entity
-@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 public class Movie {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -32,7 +31,7 @@ public class Movie {
 	private DiscountPolicy discountPolicy;
 
 	public Long calculateFee(Screening screening) {
-		return discountPolicy.calculateDiscountAmount(screening);
+		return discountPolicy.calculateDiscountAmount(screening, this);
 	}
 
 	public Long getFee() {

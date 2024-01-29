@@ -26,13 +26,13 @@ public abstract class DiscountPolicy {
 	private DiscountConditionGroup discountConditionGroup;
 
 	// template method
-	public long calculateDiscountAmount(Screening screening) {
+	public long calculateDiscountAmount(Screening screening, Movie movie) {
 		if (discountConditionGroup.isSatisfiedBy(screening)) {
-			return screening.getMovieFee() - getDiscountAmount(screening);
+			return movie.getFee() - getDiscountAmount(movie);
 		}
 
-		return screening.getMovieFee();
+		return movie.getFee();
 	}
 
-	abstract protected long getDiscountAmount(Screening screening);
+	abstract protected long getDiscountAmount(Movie movie);
 }

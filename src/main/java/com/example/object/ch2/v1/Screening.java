@@ -25,8 +25,4 @@ public class Screening {
 	public LocalDateTime getStartTime() {
 		return startTime;
 	}
-
-	public Long getMovieFee() {
-		return movie.getFee();
-	}
 }

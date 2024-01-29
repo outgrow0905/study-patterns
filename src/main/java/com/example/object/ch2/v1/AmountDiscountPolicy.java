@@ -10,7 +10,7 @@ public class AmountDiscountPolicy extends DiscountPolicy {
 	@Column(name = "discount_amount")
 	private Long amount;
 	@Override
-	protected long getDiscountAmount(Screening screening) {
+	protected long getDiscountAmount(Movie movie) {
 		return this.amount;
 	}
 }
