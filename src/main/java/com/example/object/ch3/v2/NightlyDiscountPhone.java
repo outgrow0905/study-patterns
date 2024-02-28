@@ -26,7 +26,8 @@ public class NightlyDiscountPhone {
 	}
 
 	 public Long calculateFee() {
-		Long result = 0L;
+		long result = 0L;
+
 		for (Call call : calls) {
 			if (LATE_NIGHT_HOUR_END < call.getFrom().getHour()
 					&& call.getFrom().getHour() < LATE_NIGHT_HOUR_START
