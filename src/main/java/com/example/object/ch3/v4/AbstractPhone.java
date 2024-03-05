@@ -6,7 +6,7 @@ import java.util.List;
 import lombok.Getter;
 
 @Getter
-public abstract class AbstractPhone {
+public abstract class AbstractPhone { // class explosion structure
 	private List<Call> calls = new ArrayList<>();
 
 	public void call(Call call) {
