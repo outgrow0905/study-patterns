@@ -19,6 +19,7 @@ public class TimeOfTheDayDiscountPolicy implements BasicRatePolicy {
 
 	@Override
 	public Long calculateCallFee(Call call) {
+		// 오후 22시부터 다다음날 오전 10시까지 통화하는 경우, 모든 시간을 심야시간요금으로 계산하는 과소청구 발생
 		if (LATE_NIGHT_HOUR_END < call.getFrom().getHour()
 			&& call.getFrom().getHour() < LATE_NIGHT_HOUR_START
 		) {
