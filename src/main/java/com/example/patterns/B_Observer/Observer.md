@@ -29,14 +29,15 @@ public class WeatherStation {
 }
 ~~~
 
-WeatherData 클래스는 WeatherObserver 인터페이스를 구현하여 WeatherObserver를 등록, 해지, 알림 역할을 한다.  
+WeatherData 클래스는 WeatherSubject 인터페이스를 구현하여 WeatherObserver를 등록, 해지, 알림 역할을 한다.  
 WeatherStation는 WeatherData의 클라이언트이고 setWeatherInformation을 호출하여   
 WeatherData에 등록된 WeatherObserver 전부에게 변경사항을 전달한다.
 
 ~~~java
 public class WeatherData implements WeatherSubject {
 
-List<WeatherObserver> weatherObserverList = new ArrayList<>();
+    List<WeatherObserver> weatherObserverList = new ArrayList<>();
+	
     private int temperature;
     private int humidity;
     private int pressure;
@@ -132,7 +133,7 @@ Observer는 필요한 정보만 Subject에 요청하여 처리하는 것이 좋�
 정보의 변경시 이를 알려줄 뿐, 데이터는 전송하지 않기 때문이다.
 
 그리고, 이왕 개선하는 김에 클래스 명도 범용적으로 사용할 수 있도록 변경해보자.  
-WeatherObserver와 WeatherSubject의 인테퍼에스를 살펴보면 사실 Weather가 없어도 될 것 같다.  
+WeatherObserver와 WeatherSubject의 인터페이스를 살펴보면 사실 Weather가 없어도 될 것 같다.  
 
 ~~~java
 public interface Observer {
@@ -230,7 +231,7 @@ public class Display1 implements Observer {
 그 부분은 구현은 가능할 것 같다.
 
 ~~~
-hint1: public void update(Observer observer); (Observer 인터페이스)
+hint1: public void update(Subject subject); (Observer 인터페이스)
 hint2: private List<Subject> subjectList; (Display 클래스)
 ~~~
 
