@@ -2,7 +2,7 @@ package com.example.patterns.D_Factory.v1;
 
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.*;
+import com.example.patterns.D_Factory.pizza.v1.PizzaStore;
 
 class PizzaStoreTest {
     @Test
